@@ -70,10 +70,44 @@ const stateMachineConfig: StateMachineConfig<WizardState, StepNames> = {
   },
 };
 
-function App() {
-  const [count, setCount] = useState(0);
+const getStepView = <T, V extends string>(
+  config: StateMachineConfig<T, V>,
+  stepName: V
+): React.ComponentType<{
+  state: T;
+  setState: React.Dispatch<React.SetStateAction<T>>;
+}> => config.views[stepName];
 
-  return <></>;
-}
+const StateMachineWizard = () => {
+  const [wizardState, setWizardState] = useState<WizardState>({
+    name: "",
+    age: 0,
+  });
+  const [currentStep, setCurrentStep] = useState<StepNames>(
+    stateMachineConfig.initialStep
+  );
 
-export default App;
+  const StepComponent = getStepView(stateMachineConfig, currentStep);
+
+  const handleNext = () => {
+    const canAdvance =
+      stateMachineConfig.steps[currentStep].canAdvance(wizardState);
+    if (canAdvance) {
+      if (currentStep === "step1") setCurrentStep("step2");
+      else if (currentStep === "step2") setCurrentStep("confirm");
+    } else {
+      alert("Please complete the current step before proceeding.");
+    }
+  };
+
+  return (
+    <section>
+      <h1>State Machine Wizard ⭐</h1>
+      <StepComponent state={wizardState} setState={setWizardState} />
+      {currentStep !== "confirm" && <button onClick={handleNext}>Next</button>}
+    </section>
+  );
+};
+
+
+export default StateMachineWizard;
